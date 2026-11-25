@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7efe2">
+  <title>Biblioteca compartida</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#libros" aria-label="Biblioteca compartida, ir a libros">◉ Biblioteca<br><small>compartida</small></a>
+    <nav aria-label="Secciones">
+      <button type="button" data-view="libros" class="nav-button">▤ <span>Libros</span></button>
+      <button type="button" data-view="recomendaciones" class="nav-button">✧ <span>Recomendaciones</span></button>
+      <button type="button" data-view="conexiones" class="nav-button active">◎ <span>Conexiones</span></button>
+    </nav>
+    <footer>Dos bibliotecas.<br>Un mundo de ideas.</footer>
+  </aside>
+
+  <main>
+    <header>
+      <span>MI BIBLIOTECA / <span id="crumb">CONEXIONES</span></span>
+      <span class="pill">Colección compartida</span>
+    </header>
+
+    <section id="view-libros" class="view" hidden>
+      <p class="eyebrow">NUESTRAS ESTANTERÍAS</p>
+      <h1>Todos los libros</h1>
+      <p class="intro">Explora las obras de ambas bibliotecas. Elige un libro para descubrir conexiones.</p>
+      <div class="toolbar">
+        <label class="visually-hidden" for="owner-filter">Filtrar por propietario</label>
+        <select id="owner-filter"><option value="all">Todos los propietarios</option><option value="A">Biblioteca A</option><option value="B">Biblioteca B</option></select>
+        <label class="visually-hidden" for="search">Buscar título o autor</label>
+        <input id="search" type="search" placeholder="Buscar título o autor">
+      </div>
+      <p id="catalog-status" class="status" aria-live="polite">Cargando catálogo…</p>
+      <div id="catalog" class="catalog"></div>
+    </section>
+
+    <section id="view-recomendaciones" class="view" hidden>
+      <p class="eyebrow">DESCUBRIR JUNTOS</p>
+      <h1>Una próxima lectura</h1>
+      <p class="intro">Recomendaciones de la otra biblioteca, explicadas a partir del libro que elegiste.</p>
+      <div id="recommendations" class="recommendation-list" aria-live="polite">
+        <article class="empty-state"><span class="empty-mark">✧</span><h2>Aún no hay recomendaciones</h2><p>Ve a Libros y elige una obra para pedir un análisis.</p><button type="button" class="primary" data-go="libros">Explorar libros</button></article>
+      </div>
+    </section>
+
+    <section id="view-conexiones" class="view">
+      <p class="eyebrow">IDEAS QUE SE ENCUENTRAN</p>
+      <h1>Conexiones entre libros</h1>
+      <p class="intro">Cada punto representa una obra. Las líneas muestran relaciones identificadas por Gemini.</p>
+      <div class="graph-layout">
+        <article class="panel graph-panel">
+          <div class="panel-head">
+            <div><h2>Mapa de conexiones</h2><small id="graph-caption">Elige un libro para generar relaciones entre bibliotecas.</small></div>
+            <div class="graph-actions"><button id="zoom-out" class="icon-button" type="button" aria-label="Alejar">−</button><button id="zoom-in" class="icon-button" type="button" aria-label="Acercar">+</button><button id="reset" class="outline" type="button">Restablecer</button></div>
+          </div>
+          <div class="legend"><span><i class="dot a"></i> Biblioteca A</span><span><i class="dot b"></i> Biblioteca B</span><span><i class="line-key"></i> Relación Gemini</span></div>
+          <div id="graph-wrap" class="graph-wrap" aria-label="Mapa de las relaciones de la biblioteca">
+            <svg id="graph" viewBox="0 0 960 720" role="group" aria-label="Grafo interactivo de libros">
+              <g id="graph-world"><g id="edges"></g><g id="nodes"></g></g>
+            </svg>
+            <div id="graph-empty" class="graph-empty">Al elegir un libro en la sección Libros, sus conexiones aparecerán aquí.</div>
+          </div>
+        </article>
+        <article class="panel details" id="details" aria-live="polite">
+          <p class="eyebrow">DETALLE DE CONEXIÓN</p><h2>Explora el mapa</h2><p class="muted">Selecciona una línea para leer la explicación que generó Gemini.</p>
+          <hr><p class="detail-hint">Las obras de la biblioteca A aparecen en terracota y las de la B en verde oliva.</p>
+        </article>
+      </div>
+      <p class="note">Las conexiones se muestran solo después de recibir una respuesta válida de Gemini.</p>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

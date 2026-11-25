@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recomendador de libros</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      color: #24312b;
+      background: #f5f5ef;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, input { font: inherit; }
+
+    .page { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 38px 0 24px; }
+    .eyebrow { color: #617969; font-size: .76rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 8px 0; font-family: Georgia, serif; font-size: clamp(2rem, 5vw, 3.25rem); font-weight: 500; letter-spacing: -.04em; }
+    header p { max-width: 650px; margin: 0; color: #65716a; line-height: 1.6; }
+
+    .layout { display: grid; grid-template-columns: minmax(260px, 360px) 1fr; gap: 24px; align-items: start; padding-bottom: 48px; }
+    .panel { border: 1px solid #e2e5dc; border-radius: 18px; background: #fff; box-shadow: 0 8px 30px #24312b0a; }
+    .catalog-panel { overflow: hidden; }
+    .panel-heading { padding: 18px 18px 14px; border-bottom: 1px solid #edf0e9; }
+    h2 { margin: 0; font-family: Georgia, serif; font-size: 1.25rem; font-weight: 500; }
+    .hint { margin: 6px 0 0; color: #728078; font-size: .88rem; line-height: 1.45; }
+    .search { width: 100%; margin-top: 14px; padding: 10px 12px; border: 1px solid #dfe4dc; border-radius: 10px; color: inherit; background: #fbfcfa; outline: none; }
+    .search:focus { border-color: #748d79; box-shadow: 0 0 0 3px #748d7920; }
+    .book-list { display: grid; gap: 6px; max-height: 62vh; overflow: auto; padding: 10px; }
+    .book-button { width: 100%; padding: 11px 12px; border: 0; border-radius: 11px; color: inherit; background: transparent; text-align: left; cursor: pointer; transition: background .15s, transform .15s; }
+    .book-button:hover { background: #f2f5ef; transform: translateX(2px); }
+    .book-button:focus-visible { outline: 2px solid #718a76; outline-offset: 2px; }
+    .book-title { display: block; font-weight: 700; line-height: 1.35; }
+    .book-author { display: block; margin-top: 4px; color: #738078; font-size: .86rem; }
+    .owner { display: inline-flex; margin-top: 8px; padding: 3px 8px; border-radius: 999px; color: #48634e; background: #eaf1e9; font-size: .72rem; font-weight: 700; }
+    .owner-b { color: #705d48; background: #f5efe4; }
+
+    .results { min-height: 300px; padding: 22px; }
+    .empty { display: grid; min-height: 245px; place-content: center; color: #748078; text-align: center; }
+    .empty-mark { margin-bottom: 12px; color: #a9b5a7; font-family: Georgia, serif; font-size: 2.6rem; }
+    .status { margin: 14px 0; color: #68756d; line-height: 1.5; }
+    .status.error { color: #a23e39; }
+    .selected { margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; background: #f3f6f1; }
+    .selected-label { color: #6a7a6d; font-size: .75rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    .selected strong { display: block; margin-top: 5px; font-family: Georgia, serif; font-size: 1.15rem; font-weight: 500; }
+    .selected span { display: block; margin-top: 3px; color: #748078; font-size: .9rem; }
+    .recommendation { margin-top: 12px; padding: 18px; border: 1px solid #e7e9e2; border-radius: 14px; background: #fff; }
+    .recommendation h3 { margin: 0; font-family: Georgia, serif; font-size: 1.25rem; font-weight: 500; line-height: 1.3; }
+    .recommendation .byline { margin: 5px 0 12px; color: #738078; font-size: .9rem; }
+    .reason { margin: 0; color: #3f4b44; font-size: .94rem; line-height: 1.72; white-space: pre-wrap; }
+    .word-count { margin-top: 12px; color: #849087; font-size: .76rem; }
+    .spinner { display: inline-block; width: 15px; height: 15px; margin-right: 8px; border: 2px solid #dfe6dd; border-top-color: #607b66; border-radius: 50%; vertical-align: -3px; animation: spin .75s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } .book-list { max-height: 42vh; } header { padding-top: 28px; } .results { padding: 17px; } }
+  </style>
+</head>
+<body>
+  <header class="page">
+    <div class="eyebrow">Bibliotecas cruzadas</div>
+    <h1>Encuentra tu próximo libro</h1>
+    <p>Elige un libro de la lista. Gemini buscará de tres a cuatro títulos de la otra biblioteca que dialoguen con esa obra y explicará cada conexión.</p>
+  </header>
+
+  <main class="page layout">
+    <section class="panel catalog-panel" aria-labelledby="catalog-title">
+      <div class="panel-heading">
+        <h2 id="catalog-title">Elige un libro</h2>
+        <p class="hint">La lista muestra título, autor y propietario.</p>
+        <input class="search" id="search" type="search" placeholder="Buscar por título o autor" aria-label="Buscar libros">
+      </div>
+      <div class="book-list" id="book-list" aria-live="polite"></div>
+    </section>
+
+    <section class="panel results" aria-labelledby="results-title">
+      <h2 id="results-title">Recomendaciones</h2>
+      <div id="results-content" class="empty">
+        <div>
+          <div class="empty-mark" aria-hidden="true">✳</div>
+          <p>Selecciona un libro para descubrir conexiones.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const bookList = document.querySelector("#book-list");
+    const searchInput = document.querySelector("#search");
+    const results = document.querySelector("#results-content");
+    const booksById = new Map();
+    let books = [];
+
+    function addText(parent, tag, className, text) {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      element.textContent = text;
+      parent.append(element);
+      return element;
+    }
+
+    function renderBooks(query = "") {
+      const normalizedQuery = query.trim().toLocaleLowerCase("es");
+      bookList.replaceChildren();
+      const matches = books.filter((book) =>
+        `${book.title} ${book.author}`.toLocaleLowerCase("es").includes(normalizedQuery)
+      );
+
+      for (const book of matches) {
+        const button = document.createElement("button");
+        button.className = "book-button";
+        button.type = "button";
+        button.addEventListener("click", () => requestRecommendations(book));
+        addText(button, "span", "book-title", book.title);
+        addText(button, "span", "book-author", book.author);
+        addText(button, "span", `owner${book.owner === "B" ? " owner-b" : ""}`, `Biblioteca ${book.owner}`);
+        bookList.append(button);
+      }
+
+      if (!matches.length) addText(bookList, "p", "hint", "No se encontraron libros.");
+    }
+
+    function showLoading(book) {
+      results.className = "";
+      results.replaceChildren();
+      const selection = document.createElement("div");
+      selection.className = "selected";
+      addText(selection, "div", "selected-label", "Libro elegido");
+      addText(selection, "strong", "", book.title);
+      addText(selection, "span", "", book.author);
+      results.append(selection);
+      const status = addText(results, "p", "status", "Buscando conexiones intelectuales…");
+      const spinner = document.createElement("span");
+      spinner.className = "spinner";
+      spinner.setAttribute("aria-hidden", "true");
+      status.prepend(spinner);
+    }
+
+    function wordCount(text) {
+      return text.trim().split(/\s+/).filter(Boolean).length;
+    }
+
+    function showRecommendations(book, response) {
+      results.className = "";
+      results.replaceChildren();
+      const selection = document.createElement("div");
+      selection.className = "selected";
+      addText(selection, "div", "selected-label", "Recomendaciones basadas en");
+      addText(selection, "strong", "", book.title);
+      addText(selection, "span", "", book.author);
+      results.append(selection);
+
+      if (!response.recommendations.length) {
+        addText(results, "p", "status", "No encontré conexiones suficientemente claras para recomendar otros libros a partir de esta obra.");
+        return;
+      }
+
+      addText(results, "p", "status", `Encontré ${response.recommendations.length} recomendaciones defendibles.`);
+      for (const suggestion of response.recommendations) {
+        const recommendedBook = booksById.get(suggestion.recommended_book_id);
+        if (!recommendedBook) continue;
+
+        const card = document.createElement("article");
+        card.className = "recommendation";
+        addText(card, "h3", "", recommendedBook.title);
+        addText(card, "p", "byline", `Por ${recommendedBook.author} · Biblioteca ${recommendedBook.owner}`);
+        addText(card, "p", "reason", suggestion.reason);
+        addText(card, "p", "word-count", `${wordCount(suggestion.reason)} palabras · Relacionado con ${book.title}`);
+        results.append(card);
+      }
+    }
+
+    async function requestRecommendations(book) {
+      showLoading(book);
+      for (const button of bookList.querySelectorAll("button")) button.disabled = true;
+
+      try {
+        const response = await fetch("/api/recommendations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ book_id: book.id }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "No se pudo obtener la recomendación.");
+        showRecommendations(book, data);
+      } catch (error) {
+        results.className = "";
+        results.replaceChildren();
+        addText(results, "p", "status error", error.message);
+      } finally {
+        for (const button of bookList.querySelectorAll("button")) button.disabled = false;
+      }
+    }
+
+    async function start() {
+      try {
+        const response = await fetch("/api/books");
+        if (!response.ok) throw new Error("No se pudo cargar el catálogo.");
+        books = await response.json();
+        for (const book of books) booksById.set(book.id, book);
+        renderBooks();
+      } catch (error) {
+        addText(bookList, "p", "status error", error.message);
+      }
+    }
+
+    searchInput.addEventListener("input", (event) => renderBooks(event.target.value));
+    start();
+  </script>
+</body>
+</html>

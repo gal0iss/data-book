@@ -1,0 +1,23 @@
+# Configuración local y secretos
+.env
+.env.*
+!.env.example
+
+# Entornos y cachés de Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Archivos del editor y del sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Pruebas y resultados locales fuera del MVP
+tests/
+biblioteca-ui/concepto-ui.png
